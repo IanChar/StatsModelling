@@ -1,13 +1,8 @@
 ### Script to generate logistic model of the data.
-TRAIN_PATH <- "data/train.json"
-NUM_SAMPLES = 100
 
 ##############################DATA LOAD IN AND CLEANING############################
 # Load data in.
-# install.packages("rjson")
-library("rjson")
-library("jsonlite")
-data <- fromJSON(TRAIN_PATH)
+source("load.R")
 
 # Get useful predictors for this model and convert to doubles.
 cleaned <- data[c("bathrooms", "bedrooms", "price")]
