@@ -1,5 +1,4 @@
 rm(list=ls())
-NUM_SAMPLES = 100
 TRAIN_PATH <- "data/train.json"
 packages <- c("jsonlite", "dplyr", "purrr")
 purrr::walk(packages, library, character.only = TRUE, warn.conflicts = FALSE)

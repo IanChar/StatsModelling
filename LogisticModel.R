@@ -3,7 +3,10 @@
 ##############################DATA LOAD IN AND CLEANING############################
 # Load data in.
 source("load.R")
+library(MASS)
+library(lmtest)
 
+rm(list=ls())
 # Get useful predictors for this model and convert to doubles.
 cleaned <- data[c("bathrooms", "bedrooms", "price")]
 cleaned <- lapply(cleaned, function(lst) {
@@ -30,7 +33,37 @@ trimData <- function(dataset, size) {
     elem[1:size]
   })
 }
-aptmts <- trimData(cleaned, NUM_SAMPLES)
+cleaned <- trimData(cleaned, 1000)
 
 # Make cleaned into a Dataframe
 aptmts <- as.data.frame(cleaned)
+aptmts$bathrooms <- as.factor(aptmts$bathrooms)
+aptmts$bedrooms <- as.factor(aptmts$bedrooms)
+aptmts$interest_level <- as.factor(aptmts$interest_level)
+
+
+##############################ORDINAL LOGISTIC REGRESSION############################
+aptmts.plr <- polr(interest_level ~ bedrooms + bathrooms + price + bedrooms:price + bathrooms:price, data=aptmts)
+
+# Test the significance of this model.
+lrtest(aptmts.plr) # Significant so the estimators have some explaining power.
+
+# Is bathroom:price necessary?
+aptmts.plr_tmp <- polr(interest_level ~ bathrooms + bedrooms + price + bedrooms:price, data=aptmts)
+lrtest(aptmts.plr, aptmts.plr_tmp) # Test says no, drop it
+aptmts.plr <- polr(interest_level ~ bedrooms + bathrooms + price + bedrooms:price, data=aptmts)
+
+# Is bedroom:price necessary?
+aptmts.plr_tmp <- polr(interest_level ~ bathrooms + bedrooms + price, data=aptmts)
+lrtest(aptmts.plr, aptmts.plr_tmp) # Yes
+
+# Test to see whether each of the predictors should be included.
+aptmts.plr_tmp <- polr(interest_level ~ bathrooms + bedrooms + bedroom:price, data=aptmts)
+lrtest(aptmts.plr, aptmts.plr_tmp) # price is important
+aptmts.plr_tmp <- polr(interest_level ~ bathrooms + price + bedroom:price, data=aptmts)
+lrtest(aptmts.plr, aptmts.plr_tmp) # bedrooms is important
+aptmts.plr_tmp <- polr(interest_level ~ bedrooms + price + bedroom:price, data=aptmts)
+lrtest(aptmts.plr, aptmts.plr_tmp) # bathrooms is important.
+
+### Seems that interest_level ~ bedrooms + price + bathrooms + bedrooms:price is best
+# Get the p-values for this model
