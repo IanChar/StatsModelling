@@ -1,5 +1,4 @@
 rm(list=ls())
-NUM_SAMPLES = 100
 TRAIN_PATH <- "data/train.json"
 packages <- c("jsonlite", "dplyr", "purrr")
 purrr::walk(packages, library, character.only = TRUE, warn.conflicts = FALSE)
@@ -63,4 +62,3 @@ names(cleaned)[length(names(cleaned))] <- "interest_level"
 aptmts <- as.data.frame(cleaned)
 #Data points with no spatial info
 aptmts <- aptmts[which(aptmts$latitude < 40.95 & aptmts$latitude > 40.55 & aptmts$longitude > -74.1 & aptmts$longitude < -73.5),]
-
