@@ -15,7 +15,7 @@ test <- apt[-trainInd,]
 fit <- randomForest(as.factor(interest_level) ~ bathrooms + bedrooms + price + latitude + longitude
                                                 + num_photos + num_features + desc_length + month
                                                 + day + hour,
-                    data=aptmts, 
+                    data=apt, 
                     importance=TRUE, 
                     ntree=10)
 
