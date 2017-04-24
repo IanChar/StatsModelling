@@ -113,3 +113,10 @@ test.apt <- as.data.frame(cleaned)
 #Data points with no spatial info
 test.apt <- test.apt[which(test.apt$latitude < 40.95 & test.apt$latitude > 40.55 & test.apt$longitude > -74.1 & test.apt$longitude < -73.5),]
 
+rm(hour)
+rm(interests)
+rm(mon)
+rm(num.features)
+rm(num.photos)
+rm(cleaned)
+rm(desc.length)
