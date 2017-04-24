@@ -39,6 +39,7 @@ cleaned <- trimData(cleaned, 1000)
 
 # Make cleaned into a Dataframe
 aptmts <- as.data.frame(cleaned)
+
 aptmts$bathrooms <- as.factor(aptmts$bathrooms)
 aptmts$bedrooms <- as.factor(aptmts$bedrooms)
 aptmts$interest_level <- as.factor(aptmts$interest_level)
