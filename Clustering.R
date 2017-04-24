@@ -19,19 +19,19 @@ fit <- randomForest(as.factor(interest_level) ~ bathrooms + bedrooms + price + l
                     importance=TRUE, 
                     ntree=10)
 
-Prediction <- predict(fit, aptmts[,-12])
-tab <- cbind(unname(Prediction), aptmts[,12])
+Prediction <- predict(fit, apt[,-12])
+tab <- cbind(unname(Prediction), apt[,12])
 
-mean(Prediction == aptmts[,12])
+mean(Prediction == apt[,12])
 
 
 numOfClust <- 3
-clustering <- clara(aptmts[,-c(1,2,3,6,7,8,9,10,11,12)], numOfClust)$clustering
+clustering <- clara(apt[,-c(1,2,3,6,7,8,9,10,11,12)], numOfClust)$clustering
 
 color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
 colors <- sample(color, numOfClust)
 colorClust <- colors[clustering]
-lon.lat <- cbind(aptmts$longitude, aptmts$latitude, colorClust)
+lon.lat <- cbind(apt$longitude, apt$latitude, colorClust)
 plot(lon.lat, cex = 0.5, pch = 16, col=colorClust)
 
 
