@@ -1,48 +1,34 @@
 ### Script to generate logistic model of the data.
 set.seed(100)
 library(rpart)
+library(RColorBrewer)
+library(randomForest)
 ##############################DATA LOAD IN AND CLEANING############################
 # Load data in.
-#source("load.R")
+source("load.R")
 
-# Get useful predictors for this model and convert to doubles.
-cleaned <- data[c("bathrooms", "bedrooms", "price", "latitude", "longitude")]
-cleaned <- lapply(cleaned, function(lst) {
-  as.double(lst)
-})
+trainInd <- sample(1:dim(apt)[1], dim(apt)[1]*2/3)
+train <- apt[trainInd,]
+test <- apt[-trainInd,]
 
-# Append response.
-interests <- as.double(lapply(data$interest_level, function(interest) {
-  toReturn <- -1
-  if (interest == "low") {
-    toReturn <- 0
-  } else if (interest == "medium") {
-    toReturn <- 1
-  } else if (interest == "high") {
-    toReturn <- 2
-  }
-  toReturn
-}))
-cleaned <- append(cleaned, list(interests))
-names(cleaned)[length(names(cleaned))] <- "interest_level"
 
-# Trim amount of data
-trimData <- function(dataset, size) {
-  lapply(dataset, function(elem) {
-    elem[1:size]
-  })
-}
-aptmts <- trimData(cleaned, NUM_SAMPLES)
+fit <- randomForest(as.factor(interest_level) ~ bathrooms + bedrooms + price + latitude + longitude
+                                                + num_photos + num_features + desc_length + month
+                                                + day + hour,
+                    data=aptmts, 
+                    importance=TRUE, 
+                    ntree=10)
 
-# Make cleaned into a Dataframe
-aptmts <- as.data.frame(cleaned)
+Prediction <- predict(fit, aptmts[,-12])
+tab <- cbind(unname(Prediction), aptmts[,12])
 
-#Data points with no spatial info
-aptmts <- aptmts[which(aptmts$latitude < 40.95 & aptmts$latitude > 40.55 & aptmts$longitude > -74.1 & aptmts$longitude < -73.5),]
+mean(Prediction == aptmts[,12])
+
 
 numOfClust <- 3
-clustering <- clara(aptmts[,-c(1,2,3,6)], numOfClust)$clustering
+clustering <- clara(aptmts[,-c(1,2,3,6,7,8,9,10,11,12)], numOfClust)$clustering
 
+color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
 colors <- sample(color, numOfClust)
 colorClust <- colors[clustering]
 lon.lat <- cbind(aptmts$longitude, aptmts$latitude, colorClust)
