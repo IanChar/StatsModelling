@@ -62,15 +62,12 @@ names(cleaned)[length(names(cleaned))] <- "interest_level"
 
 apt <- as.data.frame(cleaned)
 #Data points with no spatial info
-<<<<<<< HEAD
-aptmts <- aptmts[which(aptmts$latitude < 40.95 & aptmts$latitude > 40.55 & aptmts$longitude > -74.1 & aptmts$longitude < -73.5),]
-# Remove outliers in price
-aptmts <- aptmts[which(aptmts$price > 100 & aptmts$price < 1000000),]
-aptmts$bathrooms <- as.ordered(aptmts$bathrooms)
-aptmts$bedrooms <- as.ordered(aptmts$bedrooms)
-aptmts$interest_level <- as.ordered(aptmts$interest_level)
-=======
 apt <- apt[which(apt$latitude < 40.95 & apt$latitude > 40.55 & apt$longitude > -74.1 & apt$longitude < -73.5),]
+# Remove outliers in price
+apt <- apt[which(apt$price > 100 & apt$price < 1000000),]
+apt$bathrooms <- as.ordered(apt$bathrooms)
+apt$bedrooms <- as.ordered(apt$bedrooms)
+apt$interest_level <- as.ordered(apt$interest_level)
 
 
 
