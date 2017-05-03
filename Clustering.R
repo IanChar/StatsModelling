@@ -35,8 +35,11 @@ Prediction <- apply(Prediction, c(1,2), function(x) min(max(x, 1E-15), 1-1E-15))
 ######TUNED MODEL######
 
 numOfClust <- 10
-clustering <- clara(apt[,-c(1,2,3,6,7,8,9,10,11,12,13)], numOfClust, metric = "manhattan")$clustering
-
+clustering <- clara(apt[,-c(1,2,6,7,8,9,10,11,12,13)], numOfClust, metric = "manhattan")$clustering
+color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+colors <- c("blue", "green", "red")
+colorClust <- colors[clustering]
+plot(apt[, c(5,4)], cex = 0.3, pch = 16, col=clustering)
 
 varImpPlot(fit)
 

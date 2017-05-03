@@ -125,4 +125,3 @@ rm(num.features)
 rm(num.photos)
 rm(cleaned)
 rm(desc.length)
->>>>>>> a119e34da66933cb58a5a23f32476aa38726dea9
