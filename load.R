@@ -9,7 +9,7 @@ vars <- setdiff(names(data), c("photos", "features"))
 data <- map_at(data, vars, unlist) %>% tibble::as_tibble(.)
 
 # Get useful predictors for this model and convert to doubles.
-cleaned <- data[c("bathrooms", "bedrooms", "price", "latitude", "longitude")]
+cleaned <- data[c("bathrooms", "bedrooms", "price", "latitude", "longitude", "listing_id")]
 cleaned <- lapply(cleaned, function(lst) {
   as.double(lst)
 })
@@ -72,7 +72,7 @@ vars <- setdiff(names(data), c("photos", "features"))
 data <- map_at(data, vars, unlist) %>% tibble::as_tibble(.)
 
 # Get useful predictors for this model and convert to doubles.
-cleaned <- data[c("bathrooms", "bedrooms", "price", "latitude", "longitude")]
+cleaned <- data[c("bathrooms", "bedrooms", "price", "latitude", "longitude", "listing_id")]
 cleaned <- lapply(cleaned, function(lst) {
   as.double(lst)
 })
@@ -111,7 +111,7 @@ names(cleaned)[length(names(cleaned))] <- "hour"
 
 test.apt <- as.data.frame(cleaned)
 #Data points with no spatial info
-test.apt <- test.apt[which(test.apt$latitude < 40.95 & test.apt$latitude > 40.55 & test.apt$longitude > -74.1 & test.apt$longitude < -73.5),]
+#test.apt <- test.apt[which(test.apt$latitude < 40.95 & test.apt$latitude > 40.55 & test.apt$longitude > -74.1 & test.apt$longitude < -73.5),]
 
 rm(hour)
 rm(interests)
