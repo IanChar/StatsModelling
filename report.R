@@ -1,3 +1,4 @@
+#-----------Code to load all of the data--------------
 rm(list=ls())
 TRAIN_PATH <- "data/train.json"
 TEST_PATH <- "data/test.json"
@@ -125,3 +126,127 @@ rm(num.features)
 rm(num.photos)
 rm(cleaned)
 rm(desc.length)
+
+
+
+
+
+
+
+
+#--------------Code to make box plots-----------------
+source("load.R")
+library(ggplot2)
+
+# Make box plot with price
+plot(price ~ interest_level, data=aptmts, main="Price of Apartment by Interest Level",
+     ylab="Price (US Dollars per Month)", ylim=c(400, 10000))
+
+# Make box plots with price by number of bedrooms
+par(mfrow=c(2, 2))
+plotPriceInterest <- function(dataFrame) {
+  plot(price ~ interest_level, data=dataFrame, ylab="Price ($/month)", ylim=c(400, 10000))
+}
+by(aptmts, aptmts$bedrooms, plotPriceInterest)
+
+
+
+
+
+#-----------Code to generate decision Tree------------
+library(rpart)
+
+train <- read.csv("train.csv", stringsAsFactors=FALSE)
+test <- read.csv("test.csv", stringsAsFactors=FALSE)
+fit <- rpart(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+             data=train,
+             method="class")
+
+Prediction <- predict(fit, test, type = "class")
+
+
+
+
+
+
+
+
+#-----------Code to perform SVM on data --------------
+### Script to generate logistic model of the data.
+set.seed(100)
+library(rpart)
+library(cluster)
+library(RColorBrewer)
+library(randomForest)
+library(foreach)
+library(doSNOW)
+##############################DATA LOAD IN AND CLEANING############################
+# Load data in.
+source("load.R")
+
+trainInd <- sample(1:dim(apt)[1], dim(apt)[1]*1/250)
+train <- apt[trainInd,]
+test <- apt[-trainInd,]
+
+library(e1071)
+
+
+tune.out <- tune(svm,as.factor(interest_level) ~ price + latitude + longitude + 
+                   num_photos + num_features + desc_length + month + day + hour,data=train, probability=TRUE, kernel="linear",
+                 ranges=list(cost=seq(0.01,50,length.out=10)))
+fit.svcl <- tune.out$best.model
+
+prediction <- predict(fit.svcl,newdata=test)
+tab <- table(true=test[,13],pred=predict(fit.svcl,newdata=test))
+tab
+
+mean(as.numeric(as.character(test[,13])) == as.numeric(as.character(prediction)))
+
+class.predl <- predict(fit.svcl, newdata = test, probability=TRUE)
+
+
+
+
+
+tune.out <- tune(svm,as.factor(interest_level) ~ price + latitude + longitude + 
+                   num_photos + num_features + desc_length + month + day + hour,data=train, probability=TRUE, kernel="polynomial",
+                 ranges=list(cost=seq(0.01,100,length.out=10)))
+fit.svcp <- tune.out$best.model
+
+prediction <- predict(fit.svcp,newdata=test)
+tab <- table(true=test[,13],pred=predict(fit.svcp,newdata=test))
+tab
+
+mean(as.numeric(as.character(test[,13])) == as.numeric(as.character(prediction)))
+
+class.predp <- predict(fit.svcp, newdata = test, probability=TRUE)
+
+
+
+tune.out <- tune(svm,as.factor(interest_level) ~ price + latitude + longitude + 
+                   num_photos + num_features + desc_length + month + day + hour,data=train, probability=TRUE, kernel="radial",
+                 ranges=list(cost=seq(0.01,50,length.out=10)))
+fit.svcr <- tune.out$best.model
+
+prediction <- predict(fit.svcr,newdata=test)
+tab <- table(true=test[,13],pred=predict(fit.svcr,newdata=test))
+tab
+
+mean(as.numeric(as.character(test[,13])) == as.numeric(as.character(prediction)))
+class.predr <- predict(fit.svcr, newdata = test, probability=TRUE)
+
+
+class.predr <- predict(fit.svcr, newdata = test.apt[,-c(1,2)], probability=TRUE)
+probs <- attr(class.predr,"probabilities")
+write.csv(cbind(test.apt$listing_id, probs[,c(3,1,2)]), 
+          file = "svm_predictions_3.csv", row.names = FALSE, quote = FALSE)
+
+
+
+
+
+
+
+
+
+#--------------Code to perform random forest----------------

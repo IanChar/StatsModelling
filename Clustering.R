@@ -8,11 +8,15 @@ library(foreach)
 library(doSNOW)
 ##############################DATA LOAD IN AND CLEANING############################
 # Load data in.
-source("load.R")
+#source("load.R")
 
 trainInd <- sample(1:dim(apt)[1], dim(apt)[1]*2/3)
 train <- apt[trainInd,]
 test <- apt[-trainInd,]
+numTree <- 100
+
+library(doMC)
+registerDoMC()
 
 fit <- randomForest(as.factor(interest_level) ~ bathrooms + bedrooms + price + latitude + longitude
                     + num_photos + num_features + desc_length + month
@@ -23,14 +27,23 @@ fit <- randomForest(as.factor(interest_level) ~ bathrooms + bedrooms + price + l
 
 varImpPlot(fit)
 
-Prediction <- predict(fit, test.apt, type = "prob")
+fit <- foreach(ntree=rep(200, 8), .combine=combine, .multicombine=TRUE,
+                           .packages='randomForest') %dopar% {
+                             randomForest(as.factor(interest_level) ~ bathrooms + bedrooms + price + latitude + longitude
+                                          + num_photos + num_features + desc_length + month
+                                          + day + hour,
+                                          data=train,
+                                          ntree=200)
+                           }
+
+q <- predict(fit, test[,-12])
+table(q, test[,12])
+
+Prediction <- predict(fit, test[-12], type = "prob")
 Prediction <- apply(Prediction, c(1,2), function(x) min(max(x, 1E-15), 1-1E-15))
 
 write.csv(cbind(test.apt$listing_id, Prediction[,c(3,2,1)]), 
           file = "predictions.csv", row.names = FALSE, quote = FALSE)
-
-Prediction <- predict(fit, test[,-13], type = "prob")
-Prediction <- apply(Prediction, c(1,2), function(x) min(max(x, 1E-15), 1-1E-15)) 
 
 ######TUNED MODEL######
 
@@ -47,8 +60,6 @@ trainInd <- sample(1:dim(newApt)[1], dim(newApt)[1]*2/3)
 newApt.train <- newApt[trainInd,]
 newApt.test <- newApt[-trainInd,]
 
-library(doMC)
-registerDoMC()
 
 # fit <- randomForest(as.factor(interest_level) ~ bathrooms + bedrooms + price + latitude + longitude
 #                     + num_photos + num_features + desc_length + month
