@@ -1,0 +1,10 @@
+Likelihood ratio test
+
+Model 1: interest_level ~ price + num_photos + desc_length + num_features + 
+    bedrooms + bedrooms:price + bathrooms + hour + bathrooms:price + 
+    num_features:price
+Model 2: interest_level ~ price + num_photos + desc_length + num_features + 
+    bedrooms + bedrooms:price + bathrooms + hour + bathrooms:price
+  #Df  LogLik Df  Chisq Pr(>Chisq)
+1  36 -8394.6                     
+2  35 -8395.2 -1 1.1323     0.2873
