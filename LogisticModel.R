@@ -7,94 +7,67 @@ library(MASS)
 library(lmtest)
 library(ggplot2)
 library(Hmisc)
+library(pscl)
+library(fmsb)
 
 rm(list=ls())
 
 ##############################CLEAN DATA A BIT#####################################
-dat <- head(aptmts, 1000)
-dat <- filter(dat, price < 10000)
-dat$price <- scale(dat$price)
-dat$desc_length <- scale(dat$desc_length)
+summary(apt)
+apt[which(apt$bathrooms > 4),]$bathrooms = 5
+apt$bathrooms <- ceil(apt$bathrooms)
+apt$bathrooms <- as.ordered(apt$bathrooms)
+apt[which(apt$bedrooms > 4),]$bedrooms = 5
+apt$bedrooms <- as.ordered(apt$bedrooms)
+apt[which(apt$hour < 6),]$hour = 0
+apt[which(apt$hour < 12 & apt$hour >= 6),]$hour = 1
+apt[which(apt$hour < 18 & apt$hour >= 12),]$hour = 2
+apt[which(apt$hour >= 18),]$hour = 3
+apt$hour <- as.ordered(apt$hour)
+apt$interest_level <- as.ordered(apt$interest_level)
+# Price center: 3829.939  Price scale: 22080.4
+apt$price <- as.numeric(scale(apt$price))
+# Features center: 5.428948  Price scale: 3.922477
+apt$num_features <- as.numeric(scale(apt$num_features))
+# Photos center: 5.603798  Price scale: 3.628136
+apt$num_photos <- as.numeric(scale(apt$num_photos))
+# Desc center: 602.0369  Price scale: 393.2876
+apt$desc_length <- as.numeric(scale(apt$desc_length))
 
-aptmts <- filter(aptmts, price < 10000)
-aptmts$price <- scale(aptmts$price)
+# Check if there is multicolinearity
+X <- with(apt, as.matrix(cbind(price, bedrooms, bathrooms, num_photos, num_features, desc_length, hour)))
+XtX <- t(X) %*% X
+kappa(XtX)
 
+# Find vif of the
+apt.pricelm <- lm(price ~ num_features + num_photos + desc_length + bedrooms + bathrooms + hour, data=apt)
+apt.num_featureslm <- lm(num_features ~ price + num_photos + desc_length + bedrooms + bathrooms + hour, data=apt)
+apt.num_photoslm <- lm(num_photos ~ num_features + price + desc_length + bedrooms + bathrooms + hour, data=apt)
+apt.desc_lengthpricelm <- lm(desc_length ~ num_features + num_photos + price + bedrooms + bathrooms + hour, data=apt)
+vifs <- c(Price=VIF(apt.pricelm), NumFeatures=VIF(apt.num_featureslm),
+          NumPhotos=VIF(apt.num_photoslm), DescLength=VIF(apt.desc_lengthpricelm))
 
-##############################SUMMARY OF THE DATA###################################
-summary(dat)
+# Separate training and testing data
+trainInd <- sample(1:dim(apt)[1], dim(apt)[1]*1/4)
+train <- apt[trainInd,]
+test <- apt[-trainInd,]
 
-# Although it is tough to tell because of uneven sampling, higher interest levels seem to
-# to have consistently lower prices.
-ggplot(dat, aes(x = interest_level, y = price)) +
-  ylim(-5, 5) +
-  geom_boxplot(size = .75) +
-  geom_jitter(alpha = .5) +
-  facet_grid(bedrooms ~ bathrooms, margins = TRUE) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
-
-boxplot(price ~ interest_level, data=dat)
-by(dat$price, dat$interest_level, plot)
-
-# Plot what price looks like grouped by bedrooms
-par(mfrow=c(3, 2))
-by(dat$price, dat$bedrooms, plot)
-by(dat$price, dat$bedrooms, summary)
-
-plot(dat$price, dat$interest_level)
-
-# Sooooo much MC
-X <- as.matrix(cbind(dat$price, dat$bedrooms, dat$num_photos, dat$desc_length , dat$num_features))
-xtx <- t(X) %*% X
-kappa(xtx)
-
-X <- as.matrix(cbind(aptmts$price, aptmts$desc_length))
-xtx <- t(X) %*% X
-kappa(xtx)
-
-##############################ORDINAL LOGISTIC REGRESSION############################
-dat.plr <- polr(interest_level ~ bedrooms + bathrooms + price + num_photos + desc_length + bedrooms:price + bathrooms:price, data=dat)
-
-# Test the significance of this model.
-lrtest(dat.plr) # Significant so the estimators have some explaining power.
-
-# Is bathroom:price necessary?
-dat.plr_red <- polr(interest_level ~ bathrooms + bedrooms + price + num_photos + desc_length + bedrooms:price, data=dat)
-lrtest(dat.plr, dat.plr_red) # Test says no, drop it
-dat.plr <- polr(interest_level ~ bedrooms + bathrooms + price + num_photos + desc_length + bedrooms:price, data=dat)
-
-# Is bedroom:price necessary?
-dat.plr_red <- polr(interest_level ~ bathrooms + bedrooms + price + num_photos + desc_length, data=dat)
-lrtest(dat.plr, dat.plr_red) # Yes
-
-# Test to see whether each of the predictors should be included.
-dat.plr_red <- polr(interest_level ~ bathrooms + bedrooms + num_photos + desc_length + bedrooms:price, data=dat)
-lrtest(dat.plr, dat.plr_red) # price is important
-dat.plr_red <- polr(interest_level ~ bathrooms + price + num_photos + desc_length + bedrooms:price, data=dat)
-lrtest(dat.plr, dat.plr_red) # bedrooms is important
-dat.plr_red <- polr(interest_level ~ bedrooms + price + num_photos + desc_length + bedrooms:price, data=dat)
-lrtest(dat.plr, dat.plr_red) # bathrooms is important.
-dat.plr_red <- polr(interest_level ~ bedrooms + bathrooms + price + num_photos + bedrooms:price, data=dat)
-lrtest(dat.plr, dat.plr_red) # desc is important.
-dat.plr_red <- polr(interest_level ~ bedrooms + bathrooms + price + desc_length + bedrooms:price, data=dat)
-lrtest(dat.plr, dat.plr_red) # num photos is not important
-
-dat.plr <- polr(interest_level ~ bathrooms + bedrooms + price + desc_length + bedrooms:price, data=aptmts, Hess=TRUE)
-tmp <- polr(interest_level ~ price, data=dat)
-lrtest(dat.plr, tmp)
-### Seems that interest_level ~ bedrooms + price + bathrooms + desc_length + bedrooms:price is best
-
-#########################################ASSESSMENT OF MODEL####################################
+# Try to train a model
+# No price:bathrooms because std error so high it flips signs
+# No price:num_features for same reason
+train.polr <- polr(interest_level ~ price + num_photos + desc_length + num_features + bedrooms + bedrooms:price + hour, Hess=TRUE, data=train)
+train.polr_red <- polr(interest_level ~ price + num_photos + desc_length + num_features + bedrooms + hour, Hess=TRUE, data=train)
+lrtest(train.polr, train.polr_red)
 
 ### Get the p-values for this model
-coefs <- coef(summary(aptmts.bedroomplr))
+coefs <- coef(summary(train.polr))
 p_vals <- pnorm(abs(coefs[, "t value"]), lower.tail = FALSE) * 2
+# Remove t_value
+coefs <- coefs[, c("Value", "Std. Error")]
 coefs <- cbind(coefs, "p value" = p_vals)
+coefs <- cbind(coefs, "Odds Ratio" = exp(coef(train.polr)))
 coefs
 # p values are all practically 0, is this true or is there some problem?
-
-### Calculate odds ratios
-odds_ratios <- exp(coef(dat.plr))
-odds_ratios
 # These shows multiplicative increase in odds over having no interest.
 # Odds ratios show that number of bathrooms is quite important. Since bedrooms2 is the only one with 
 # OR over 1, this shows people are really looking for 2 bedrooms. price is hard to judge since not standardized.
@@ -102,26 +75,24 @@ odds_ratios
 
 
 ### Conf int
-confint.default(dat.plr)
+confint.default(train.polr)
 # bedrooms1:price has 0 in CI suggesting bathroom might change price's affect on interest level between 0 and 1
 
 ### Test the parallel slopes assumption
 sf <- function(y) {
-  c('Interest>=1' = qlogis(mean(y >= 1)),
-    'Interest>=2' = qlogis(mean(y >= 2)),
-    'Interest>=3' = qlogis(mean(y >= 3)))
+  c('Interest>=0' = qlogis(mean(y >= 0)),
+    'Interest>=1' = qlogis(mean(y >= 1)),
+    'Interest>=2' = qlogis(mean(y >= 2)))
 }
-(s <- with(dat, summary(as.numeric(interest_level) ~ bedrooms + bathrooms + price, fun=sf)))
+(s <- with(train, summary(as.numeric(as.character(interest_level)) ~ price + num_photos + desc_length + num_features + bedrooms + bedrooms:price + hour, fun=sf)))
+s[, 2] <- s[, 3]
+s[, 3] <- s[, 4]
+s[, 4] <- s[, 3] - s[, 2]
+s
 
-# Test coefficients across logistic regressions
-glm(I(as.numeric(interest_level) >= 2) ~ bedrooms, family="binomial", data = dat)
-glm(I(as.numeric(interest_level) >= 3) ~ bedrooms, family="binomial", data = dat)
-
-glm(I(as.numeric(interest_level) >= 2) ~ bathrooms, family="binomial", data = dat)
-glm(I(as.numeric(interest_level) >= 3) ~ bathrooms, family="binomial", data = dat)
-
-glm(I(as.numeric(interest_level) >= 2) ~ price, family="binomial", data = dat)
-glm(I(as.numeric(interest_level) >= 3) ~ price, family="binomial", data = dat)
+s[, 2] <- s[, 2] - s[, 2]
+s[, 3] <- s[, 3] - s[, 3]
+plot(s, which=1:6, pch=1:3, xlab='logit', main=' ', xlim=range(s[,3:4]))
 
 # See how many fit
 error <- as.numeric(predict(dat.plr)) - as.numeric(dat$interest_level)
@@ -133,3 +104,7 @@ binaryError <- lapply(error, function(val) {
   toReturn
 })
 Reduce("+", binaryError)
+
+# Find psuedo-R^2
+pR2(train.polr)
+pR2(train.polr_red)

@@ -4,12 +4,19 @@ library(rpart)
 ##############################DATA LOAD IN AND CLEANING############################
 # Load data in.
 #source("load.R")
-lon.lat <- cbind(aptmts$longitude, aptmts$latitude)
-plot(lon.lat, cex = 0.5, pch = 16, col=rgb(1-aptmts$interest_level/2, 0, 0, 0.25)) 
+lon.lat <- cbind(apt$longitude, apt$latitude)
 
-trainInd <- sample(1:dim(aptmts)[1], dim(aptmts)[1]*2/3)
-train <- aptmts[trainInd,]
-test <- aptmts[-trainInd,]
+color = grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+colors <- c("blue", "green", "red")
+colorClust <- colors[apt$interest_level + 1]
+plot(lon.lat, cex = 0.3, pch = 16, col=colorClust)
+
+quilt.plot(lon.lat, apt$interest_level, nx = 250, ny = 250)
+
+
+trainInd <- sample(1:dim(apt)[1], dim(apt)[1]*2/3)
+train <- apt[trainInd,]
+test <- apt[-trainInd,]
 
 fit <- rpart(interest_level ~ ., 
              data=train,
