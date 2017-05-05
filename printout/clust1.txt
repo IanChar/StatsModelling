@@ -1,0 +1,29 @@
+% latex table generated in R 3.3.3 by xtable 1.8-2 package
+% Thu May  4 21:41:34 2017
+\begin{table}[ht]
+\centering
+\begin{tabular}{rrrrrr}
+  \hline
+ & Cluster 1 & Cluster 2 & Cluster 3 & Cluster 4 & Cluster 5 \\
+  \hline
+price & -36.35 & -35.32 & -32.75 & -31.63 & -22.31 \\
+  num\_photos & 0.11 & 0.26 & 0.18 & 0.09 & 0.16 \\
+  desc\_length & 0.22 & 0.27 & 0.33 & 0.12 & 0.26 \\
+  num\_features & 0.30 & 0.56 & 0.74 & 0.38 & 0.60 \\
+  bedrooms1 & 2.80 & -3.82 & 3.18 & 3.83 & 0.92 \\
+  bedrooms2 & -2.22 & -10.74 & -2.91 & -0.24 & -4.53 \\
+  bedrooms3 & 0.10 & -6.18 & -0.47 & -0.93 & -1.99 \\
+  bedrooms4 & -0.40 & -3.31 & -0.24 & -0.06 & -0.92 \\
+  bedrooms5+ & 0.17 & -0.82 & 0.10 &  & -0.27 \\ 
+  hour1 & 0.48 & 0.62 & 0.67 & 0.35 & 0.91 \\
+  hour2 & -0.04 & -0.43 & -0.40 & -0.08 & -0.35 \\
+  hour3 & -0.14 & -0.28 & 0.09 & 0.28 & -0.05 \\
+  price:bedrooms1 & 46.13 & 58.18 & 46.67 & 41.38 & 40.42 \\
+  price:bedrooms2 & -0.45 & -9.60 & -13.30 & 14.85 & -8.15 \\
+  price:bedrooms3 & 16.21 & 8.92 & 0.79 & -4.18 & 8.43 \\
+  price:bedrooms4 & 5.56 & -1.57 & -2.31 & -4.40 & -2.64 \\
+  price:bedrooms5+ & 8.92 & 4.12 & 4.60 &  & 0.38 \\
+  R2.McFadden & 0.14 & 0.18 & 0.17 & 0.14 & 0.16 \\
+   \hline
+\end{tabular}
+\end{table}

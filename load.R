@@ -64,13 +64,8 @@ apt <- as.data.frame(cleaned)
 #Data points with no spatial info
 apt <- apt[which(apt$latitude < 40.95 & apt$latitude > 40.55 & apt$longitude > -74.1 & apt$longitude < -73.5),]
 # Remove outliers in price
-apt <- apt[which(apt$price > 100 & apt$price < 1000000),]
-apt$bathrooms <- as.ordered(apt$bathrooms)
-apt$bedrooms <- as.ordered(apt$bedrooms)
-apt$interest_level <- as.ordered(apt$interest_level)
-
-
-
+apt <- apt[which(apt$price > 100),]
+#####################################################################
 
 data <- fromJSON(TEST_PATH)
 vars <- setdiff(names(data), c("photos", "features"))
@@ -125,4 +120,3 @@ rm(num.features)
 rm(num.photos)
 rm(cleaned)
 rm(desc.length)
->>>>>>> a119e34da66933cb58a5a23f32476aa38726dea9
